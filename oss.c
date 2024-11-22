@@ -170,6 +170,7 @@ int main(int argc, char** argv) {
          it = atoi(argv[6]); //int t stores how long processes are allowed to run
          printf("Time between each process launch: %d \n",t);
          t = 0;
+         
          //it = atoi(argv[8]); //int it stores a number that will be used to keep track of when to launch each process
          //printf("Interval between each process: %d \n",it);
 
@@ -225,15 +226,16 @@ int main(int argc, char** argv) {
          buf1.intData = child[y];
          strcpy(buf1.strData,"begin");
          printf("Sending message to worker\n");
+         fprintf(log,"oss messaging P%d (pid %d)\nProcess P%d (pid %d) requesting resources at time %d:%d\n",y,child[y],y,child[y],*pint,*nint);
          sleep(1);
-         fprintf(log,"oss messaging p%d (pid %d) and putting it into ready queue at time %d:%d\n",y,child[y],*pint,*nint);
+         fprintf(log,"oss granting P%d (pid %d) request at time %d:%d\n",y,child[y],*pint,*nint);
          if (msgsnd(msqid, &buf1, sizeof(msgbuffer)-sizeof(long), 0) == -1) {
                 perror("msgsend to worker failed\n");
                 exit(1);
          }
-         fprintf(log,"OSS: Dispatching process %d with PID %d from ready queue at time %d:%d\n",y,child[y],*pint,*nint);
+         fprintf(log,"oss running deadlock detection at time %d:%d\n",*pint,*nint);
 
-         fprintf(log,"OSS: Receiving process %d with PID %d at time %d:%d\n",y,child[y],*pint,*nint);
+         //fprintf(log,"OSS: Receiving process %d with PID %d at time %d:%d\n",y,child[y],*pint,*nint);
          /*msgbuffer rcvbuf;
          if (msgrcv(msqid, &rcvbuf, sizeof(msgbuffer), getpid(),0) == -1) {
                 perror("failed to receive message in oss\n");
@@ -245,6 +247,7 @@ int main(int argc, char** argv) {
          //printf("Oss received message from worker: %s\n", rcvbuf.strData);
 
          sleep(1);
+
 
          /*for (int h=0;h<65;h++) {
                 if (msgrcv(msqid, &rcvbuf, sizeof(msgbuffer), getpid(), 0) == -1) {
