@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
         break;
     case 0:
         if (strcmp(argv[1], x) == 0) { //if -h is present, displays a help message only
-        printf("- Intructions on how to run this file: \n- use the 'make' command to generate executable files for oss and worker \n- worker will start a clock and terminate after a random amount of time, based on the seed of the child process's PID\n- oss will immediately fork to create two processes, one will keep track of a global system time that the workers will use to keep track of, and the other will create as many worker processes that the user specifies\n- to run oss, you can first run './oss -h' to display this help message in the terminal. To specify how many workers to run, enter '-n' followed by a number. To specify how many processes can run at once, enter '-s' followed by a number. To specify the interval to launch each child process, enter '-t' followed by a number. For example, you could enter './oss -n 5 -s 3 -t 6' to run 5 workers total, 3 processes to run at most, with each child process starting every 6 seconds\n- to only run worker, enter in './worker', but this will wait for a message from a nonexistant parent in order to proceed with the rest of it's program \n- After a total of 60 seconds, the program will close entirely.\n- A logfile will be created to show the process of OSS and the workers.");
+         printf("- Intructions on how to run this file: \n- use the 'make' command to generate executable files for oss and worker \n- worker will wait for a message from oss before starting, in which they will start a clock and terminate after a random amount of time, based on the seed of the child process's PID. There is a high chance worker will terminate before starting the clock, and a high chance for the worker to deadlock.\n- oss will immediately fork to create two processes, one will keep track of a global system time that the workers will use to keep track of, and the other will create as many worker processes that the user specifies\n- to run oss, you can first run './oss -h' to display this help message in the terminal. To specify how many workers to run, enter '-n' followed by a number. To specify how many processes can run at once, enter '-s' followed by a number. To specify the interval to launch each child process, enter '-t' followed by a number. For example, you could enter './oss -n 5 -s 3 -t 6' to run 5 workers total, 3 processes to run at most, with each child process starting every 6 seconds\n- to only run worker, enter in './worker', but this will wait for a message from a nonexistant parent in order to proceed with the rest of it's program \n- After a total of 60 seconds, the program will close entirely.\n- A logfile will be created to show the process of OSS and the workers.");
          exit(1);
         } else if (strcmp(argv[1], y) != 0) {
           printf("Invalid user input, closing program.\n");
@@ -224,7 +224,9 @@ int main(int argc, char** argv) {
          buf1.mtype = child[y];
          buf1.intData = child[y];
          strcpy(buf1.strData,"begin");
-         fprintf(log,"OSS: Generating process %d with PID %d and putting it into ready queue at time %d:%d\n",y,child[y],*pint,*nint);
+         printf("Sending message to worker\n");
+         sleep(1);
+         fprintf(log,"oss messaging p%d (pid %d) and putting it into ready queue at time %d:%d\n",y,child[y],*pint,*nint);
          if (msgsnd(msqid, &buf1, sizeof(msgbuffer)-sizeof(long), 0) == -1) {
                 perror("msgsend to worker failed\n");
                 exit(1);
@@ -232,16 +234,17 @@ int main(int argc, char** argv) {
          fprintf(log,"OSS: Dispatching process %d with PID %d from ready queue at time %d:%d\n",y,child[y],*pint,*nint);
 
          fprintf(log,"OSS: Receiving process %d with PID %d at time %d:%d\n",y,child[y],*pint,*nint);
-         msgbuffer rcvbuf;
-
-         /*if (msgrcv(msqid, &rcvbuf, sizeof(msgbuffer), getpid(),0) == -1) {
+         /*msgbuffer rcvbuf;
+         if (msgrcv(msqid, &rcvbuf, sizeof(msgbuffer), getpid(),0) == -1) {
                 perror("failed to receive message in oss\n");
                 exit(1);
 
-         }*/
-         //int toend;
-         sleep(it);
-         printf("Oss received message from worker: Done %s\n", rcvbuf.strData);
+         }
+         int toend;*/
+         //sleep(it);
+         //printf("Oss received message from worker: %s\n", rcvbuf.strData);
+
+         sleep(1);
 
          /*for (int h=0;h<65;h++) {
                 if (msgrcv(msqid, &rcvbuf, sizeof(msgbuffer), getpid(), 0) == -1) {

@@ -70,23 +70,58 @@ int main(int argc, char** argv) {
                 exit(1);
         }
     }
-    printf("Worker %d received message, starting clock.\n", getpid());
-    printf("Occupied\tPID\t\tSeconds\tNanoseconds\n");
-    for (int i=0;i<s;i++) {
-      sleep(1);
-      printf("\t1\t%4d\t%8d\t%d\n", getpid(), *cint, *xint);
-    //SysClockS: %d SysClockNano: %d TermTimeS: %d TermTimeNano: %d - %d have passed since starting
-      //printf("WORKER PID:%d PPID:%d SysClockS:%d SysClockNano:%d TermTimeS:%d TermTimeNano:%d\n", getpid(),getppid(),*cint,*xint,s,n);
+    
+    int d = rand() % 3;
+
+    if (d == 1) {
+        printf("Worker %d received message. Requesting resource and starting clock.\n", getpid());
+
+        printf("Occupied\tPID\t\tSeconds\tNanoseconds\n");
+        for (int i=0;i<s;i++) {
+          sleep(1);
+          printf("\t1\t%4d\t%8d\t%d\n", getpid(), *cint, *xint);
+        }
+
+        buf.mtype =getppid();
+        buf.intData =getppid();
+        //strcpy(buf.strData, "Releasing resource.");
+        printf("Oss received message from worker: Releasing resource.\n");
+
+        if (msgsnd(msqid,&buf,sizeof(msgbuffer)-sizeof(long),0)==-1){
+          perror("msgsnd to oss failed\n");
+          exit(1);
+        }
+    } else if (d == 2) {
+        printf("Worker %d received message. Requesting resource and starting clock.\n", getpid());
+
+        printf("Occupied\tPID\t\tSeconds\tNanoseconds\n");
+        for (int i=0;i<3;i++) {
+          sleep(1);
+          printf("\t1\t%4d\t%8d\t%d\n", getpid(), *cint, *xint);
+        }
+
+        buf.mtype =getppid();
+        buf.intData =getppid();
+        //strcpy(buf.strData, "worker deadlocked, terminating...");
+        printf("Oss received message from worker: worker deadlocked, terminating...\n");
+
+        if (msgsnd(msqid,&buf,sizeof(msgbuffer)-sizeof(long),0)==-1){
+          perror("msgsnd to oss failed\n");
+          exit(1);
+        }
+    } else {
+        printf("Worker %d received message. Terminating...\n", getpid());
+        buf.mtype =getppid();
+        buf.intData =getppid();
+        //strcpy(buf.strData, "worker terminated.");
+        printf("Oss received message from worker: worker terminated.\n");
+
+        if (msgsnd(msqid,&buf,sizeof(msgbuffer)-sizeof(long),0)==-1){
+          perror("msgsnd to oss failed\n");
+          exit(1);
+        }
     }
 
-    buf.mtype =getppid();
-    buf.intData =getppid();
-    strcpy(buf.strData, "worker done");
-
-    if (msgsnd(msqid,&buf,sizeof(msgbuffer)-sizeof(long),0)==-1){
-        perror("msgsnd to oss failed\n");
-        exit(1);
-    }
 
     shmdt(cint);
     shmdt(xint);
